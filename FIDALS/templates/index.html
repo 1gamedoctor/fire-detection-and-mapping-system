@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forest Fire Monitoring</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.css" rel="stylesheet" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+</head>
+
+<body>
+    <div class="top-div">
+        <div id="map" style="height: 500px;"></div>
+        <div id="sidebar">
+            <button onclick="resetView()">Switch to Map View</button>
+            <button id="button_1" onclick="switchMapView('thermal')">Switch to Satellite Thermal Image</button>
+            <button id="terrainButton" onclick="switchMapView('terrain')">Switch to Terrain View</button>
+            <select id="locationDropdown" onchange="zoomToLocation()">
+                <option value="" disabled selected>Select a Location</option>
+                <option value="0,0,2">Global View</option>
+                <option value="1,37.9062,6.5">Local View</option>
+                <option value="-1.236788674512733, 36.83038002108215,10">Karura , Kenya</option>
+                <option value="0.439657, 35.826080,10">Tugen Hills, Kenya</option>
+                <option value="-0.061880573959208394, 35.59898857328353,10">Masaita Forest, Kenya</option>
+            </select>
+        </div>
+    </div>
+    <div style="position:absolute;top:10px;left:10px;padding:10px;background-color:white;border-radius:10px;">
+        Select Overlay:
+        <select id="layerSelector" onchange="updateTileLayer()">
+            <option value="microsoft.weather.radar.main" selected="selected">Radar</option>
+            <option value="microsoft.weather.infrared.main">Infrared</option>
+        </select>
+    </div>
+
+    <div class="bottom-div">
+        <div class="sensor-values">
+            <label for="sensorSelect">Select Sensor:</label>
+            <select id="sensorSelect" onchange="loadSensorData()">
+                <!-- Add your sensor options here -->
+                <option value="sensor1">Sensor 1</option>
+                <option value="sensor2">Sensor 2</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <!-- Display sensor data with charts -->
+        <div id="sensorData"></div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-database.js";
+
+        // Firebase configuration (replace with your Firebase project config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC06goRqxsvP7OhRfZh3YP71tjQ69hrIq8",
+            authDomain: "fidals.firebaseapp.com",
+            databaseURL: "https://fidals-default-rtdb.firebaseio.com",
+            projectId: "fidals",
+            storageBucket: "fidals.appspot.com",
+            messagingSenderId: "579327937857",
+            appId: "1:579327937857:web:6cf90e676afc4ada9065c0",
+            measurementId: "G-R7RSY8PBW2"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Reference to Firebase database
+        const db = getDatabase(app);
+
+        // Function to load sensor data when a sensor station is selected
+        function loadSensorData() {
+            // Get selected sensor station from the dropdown
+            const selectedSensor = document.getElementById('sensorSelect').value;
+
+            // Reference to the sensor data in Firebase
+            const sensorDataRef = ref('/fidals-node-4/-NjbvPVY7wfeQvxn2_yc');
+
+            // Listen for changes in the sensor data
+            onValue(sensorDataRef, (snapshot) => {
+                const sensorData = snapshot.val();
+                // Display sensor data with charts
+                displaySensorData(sensorData);
+            });
+        }
+
+        // Function to display sensor data with charts
+        function displaySensorData(sensorData) {
+            const sensorDataDisplay = document.getElementById('sensorData');
+
+            // Clear previous data
+            sensorDataDisplay.innerHTML = '';
+
+            if (sensorData) {
+                // Display temperature, humidity, and MQ7 values with charts
+                displayChart('Temperature', sensorData.temperature, '°C');
+                displayChart('Humidity', sensorData.humidity, '%');
+                displayChart('MQ7 Value', sensorData.mq7, '');
+
+            } else {
+                // Display a message if no data is available
+                sensorDataDisplay.innerHTML = '<p>No data available for the selected sensor station.</p>';
+            }
+        }
+
+
+        // Function to display a chart
+        function displayChart(label, value, unit) {
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'chart-container';
+            chartContainer.innerHTML = `<h3>${label}</h3><canvas id="${label.toLowerCase()}Chart"></canvas>`;
+            document.getElementById('sensorData').appendChild(chartContainer);
+
+            const ctx = document.getElementById(`${label.toLowerCase()}Chart`).getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut', // You can change the chart type as needed
+                data: {
+                    labels: [label],
+                    datasets: [{
+                        data: [value],
+                        backgroundColor: ['rgba(75, 192, 192, 0.2)'],
+                        borderColor: ['rgba(75, 192, 192, 1)'],
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${label}: ${value} ${unit}`,
+                        },
+                        legend: {
+                            display: false,
+                        }
+                    },
+                }
+            });
+        }
+    </script>
+    <script>
+        var map = L.map('map').setView([0, 0], 2);
+
+        var map_1, tileLayer;
+
+        var weatherTileUrl = 'https://{azMapsDomain}/map/tile?api-version=2.0&tilesetId={layerName}&zoom={z}&x={x}&y={y}';
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker = L.marker([0, 0]).addTo(map);
+
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Sample sensor location with blinking icon and red circle
+        var sensorLocation = L.marker([1, 37.9062], {
+            icon: L.divIcon({
+                className: 'blinking-icon',
+                iconSize: [1, 1],
+                html: '<div class="sensor-icon"></div>'
+            })
+        }).addTo(map);
+
+        var sensorCircle = L.circle([1, 37.9062], {
+            radius: 100,  // Adjust the radius as needed
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 0.5
+        }).addTo(map);
+        var sensorCircle = L.circle([-1.236788674512733, 36.83038002108215], {
+            radius: 100,  // Adjust the radius as needed
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 0.5
+        }).addTo(map);
+        var sensorCircle = L.circle([-0.061880573959208394, 35.59898857328353, 10], {
+            radius: 100,  // Adjust the radius as needed
+            color: 'blue',
+            fillColor: 'blue',
+            fillOpacity: 0.5
+        }).addTo(map);
+        function zoomToLocation() {
+            var selectedLocation = document.getElementById('locationDropdown').value;
+            var [lat, lng, zoom] = selectedLocation.split(',').map(parseFloat);
+
+            if (!isNaN(lat) && !isNaN(lng) && !isNaN(zoom)) {
+                map.setView([lat, lng], zoom);
+            }
+        }
+        //switch to terrain view
+        function switchMapView(view) {
+            if (view === 'terrain') {
+                // Switch to terrain view
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                }).addTo(map);
+            } else if (view === 'thermal') {
+                //switch to thermal Maps overlay view
+                if (map) {
+                    //remove existing map controls
+                    map.remove();
+                }
+                createMicrosoftMap();
+            }
+        }
+
+        // Switch View to Microsoft thermal images
+        function createMicrosoftMap() {
+            //initialize map instance
+            map = new atlas.Map('map', {
+                center: [35, 0],
+                zoom: 5,
+                view: 'Auto',
+                style: 'grayscale_dark',
+
+                //Add authentication details for connecting to Azure Maps.
+                authOptions: {
+                    //Alternatively, use an Azure Maps key. Get an Azure Maps key at https://azure.com/maps. NOTE: The primary key should be used as the key.
+                    authType: 'subscriptionKey',
+                    subscriptionKey: 'WLLe6GoEdl_J6bYAfpOuQBIRiGwBQaMChaY80VRYIcE'
+                }
+            });
+
+            //Wait until the map resources are ready.
+            map.events.add('ready', function () {
+                //Create a style control and add it to the map.
+                map.controls.add(new atlas.control.StyleControl({
+                    mapStyles: 'all'
+                }), {
+                    position: 'top-right'
+                });
+
+                //Initialize the weather tile layer.
+                updateTileLayer();
+            });
+        }
+
+        function updateTileLayer() {
+            var layerName = document.getElementById("layerSelector").value;
+
+            var tileUrl = weatherTileUrl.replace('{layerName}', layerName);
+
+            if (!tileLayer) {
+                //Create a tile layer and add it to the map below the label layer.
+                tileLayer = new atlas.layer.TileLayer({
+                    tileUrl: tileUrl,
+                    opacity: 0.9,
+                    tileSize: 256
+                });
+                map.layers.add(tileLayer, 'labels');
+            } else {
+                tileLayer.setOptions({
+                    tileUrl: tileUrl
+                });
+            }
+        }
+
+        function resetView() {
+            // Reset the map layer to default (normal view)
+            map.eachLayer((layer) => {
+                if (layer instanceof L.TileLayer) {
+                    layer.setUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

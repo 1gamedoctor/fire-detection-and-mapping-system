@@ -1,0 +1,91 @@
+L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.{ext}', {
+	minZoom: 1,
+	maxZoom: 16,
+	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	ext: 'jpg'
+});
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data Display</title>
+    <!-- Add the Firebase JavaScript SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.5.0/firebase-database.js"></script>
+    <style>
+        #sensorSelect {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor Data Display</h1>
+
+    <!-- Dropdown to select a sensor station -->
+    <label for="sensorSelect">Select Sensor Station:</label>
+    <select id="sensorSelect" onchange="loadSensorData()">
+        <option value="sensor1">Sensor Station 1</option>
+        <option value="sensor2">Sensor Station 2</option>
+        <!-- Add more sensor stations as needed -->
+    </select>
+
+    <!-- Display sensor data -->
+    <div id="sensorData"></div>
+
+    <script>
+        // Firebase configuration (replace with your Firebase project config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-project-id.firebaseapp.com",
+            databaseURL: "https://your-project-id.firebaseio.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "your-messaging-sender-id",
+            appId: "your-app-id"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Reference to Firebase database
+        const database = firebase.database();
+
+        // Function to load sensor data when a sensor station is selected
+        function loadSensorData() {
+            // Get selected sensor station from the dropdown
+            const selectedSensor = document.getElementById('sensorSelect').value;
+
+            // Reference to the sensor data in Firebase
+            const sensorDataRef = database.ref(selectedSensor);
+
+            // Listen for changes in the sensor data
+            sensorDataRef.on('value', (snapshot) => {
+                const sensorData = snapshot.val();
+
+                // Display sensor data
+                displaySensorData(sensorData);
+            });
+        }
+
+        // Function to display sensor data
+        function displaySensorData(sensorData) {
+            const sensorDataDisplay = document.getElementById('sensorData');
+            
+            // Clear previous data
+            sensorDataDisplay.innerHTML = '';
+
+            if (sensorData) {
+                // Display temperature, humidity, and MQ7 values
+                sensorDataDisplay.innerHTML += `<p><strong>Temperature:</strong> ${sensorData.temperature} °C</p>`;
+                sensorDataDisplay.innerHTML += `<p><strong>Humidity:</strong> ${sensorData.humidity} %</p>`;
+                sensorDataDisplay.innerHTML += `<p><strong>MQ7 Value:</strong> ${sensorData.mq7}</p>`;
+            } else {
+                // Display a message if no data is available
+                sensorDataDisplay.innerHTML = '<p>No data available for the selected sensor station.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

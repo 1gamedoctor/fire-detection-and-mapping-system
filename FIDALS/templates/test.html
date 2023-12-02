@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+    <title>Sensor Locator Map</title>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([0, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Sample sensor location with blinking icon and red circle
+        var sensorLocation = L.marker([1,37.9062], {
+            icon: L.divIcon({
+                className: 'blinking-icon',
+                iconSize: [1, 1],
+                html: '<div class="sensor-icon"></div>'
+            })
+        }).addTo(map);
+
+        var sensorCircle = L.circle([1,37.9062], {
+            radius: 100,  // Adjust the radius as needed
+            color: 'blue',
+            fillColor: 'blue',
+            fillOpacity: 0.5
+        }).addTo(map);
+
+        // Function to simulate sensor trigger (make the icon blink)
+        function simulateSensorTrigger() {
+            sensorLocation.setIcon(L.divIcon({
+                className: 'blinking-icon',
+                iconSize: [20, 20],
+                color:'red',
+                html: '<div class="sensor-icon blinking"></div>'
+            }));
+
+            // Also, highlight the circle area
+            sensorCircle.setStyle({ fillOpacity: 0.8 });
+        }
+
+        // Simulate sensor trigger after a delay (for demonstration)
+        setTimeout(simulateSensorTrigger, 3000);
+
+        // CSS for blinking effect
+        var style = document.createElement('style');
+        style.innerHTML = '.blinking { animation: blinking-animation 1s infinite; }' +
+                          '@keyframes blinking-animation { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }';
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

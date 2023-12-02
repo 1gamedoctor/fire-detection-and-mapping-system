@@ -1,0 +1,215 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    background-image: url("background.jpg");
+    background-repeat: no-repeat;
+}
+
+#map {
+    height: 100vh;
+    flex: 1;
+    width: 100%;
+}
+
+#sidebar {
+    width: 200px;
+    background-color: #f1f1f1;
+    padding: 20px;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+button {
+    background: #FF4742;
+    border: 1px solid #FF4742;
+    border-radius: 6px;
+    box-shadow: rgba(0, 0, 0, 0.1) 1px 2px 4px;
+    box-sizing: border-box;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: inline-block;
+    font-family: nunito, roboto, proxima-nova, "proxima nova", sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 16px;
+    min-height: 40px;
+    outline: 0;
+    padding: 12px 14px;
+    text-align: center;
+    text-rendering: geometricprecision;
+    text-transform: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: middle;
+    margin-top: 20px;
+}
+
+button:hover,
+button:active {
+    background-color: initial;
+    background-position: 0 0;
+    color: #FF4742;
+}
+
+button:active {
+    opacity: .5;
+}
+
+select{
+    position: relative;
+    display: block;
+    width:100px;
+    margin: 0 auto;
+    font-family: 'Open Sans', 'Helvetica Neue', 'Segoe UI', 'Calibri', 'Arial', sans-serif;
+    font-size: 18px;
+    margin-top: 30px;
+    color: #60666d;
+
+    @media (min-width: 768px) {
+        width: 70%;
+    }
+
+    @media (min-width: 992px) {
+        width: 100%;
+    }
+
+    @media (min-width: 1200px) {
+        width: 100%;
+    }
+
+    &__current {
+        position: relative;
+        box-shadow: 0 15px 30px -10px transparentize(#000, 0.9);
+        cursor: pointer;
+        outline: none;
+
+        &:focus {
+            &+.select-box__list {
+                opacity: 1;
+
+
+                animation-name: none;
+
+                .select-box__option {
+                    cursor: pointer;
+                }
+            }
+
+            .select-box__icon {
+                transform: translateY(-50%) rotate(180deg);
+            }
+        }
+    }
+
+    &__icon {
+        position: absolute;
+        top: 50%;
+        right: 15px;
+        transform: translateY(-50%);
+        width: 20px;
+        opacity: 0.3;
+        transition: 0.2s ease;
+    }
+
+    &__value {
+        display: flex;
+    }
+
+    &__input {
+        display: none;
+
+        &:checked+.select-box__input-text {
+            display: block;
+        }
+    }
+
+    &__input-text {
+        display: none;
+        width: 100%;
+        margin: 0;
+        padding: 15px;
+        background-color: #fff;
+    }
+
+    &__list {
+        position: absolute;
+        width: 100%;
+        padding: 0;
+        list-style: none;
+        opacity: 0;
+
+        animation-name: HideList;
+        animation-duration: 0.5s;
+        animation-delay: 0.5s;
+        animation-fill-mode: forwards;
+        animation-timing-function: step-start;
+        box-shadow: 0 15px 30px -10px transparentize(#000, 0.9);
+    }
+
+    &__option {
+        display: block;
+        padding: 15px;
+        background-color: #fff;
+
+        &:hover,
+        &:focus {
+            color: #546c84;
+            background-color: #fbfbfb;
+        }
+    }
+}
+
+@keyframes HideList {
+    from {
+        transform: scaleY(1);
+    }
+
+    to {
+        transform: scaleY(0);
+    }
+}
+
+.bottom-div {
+    position: relative;
+    width: 40%;
+    align-self: center;
+    background-color: #f1f1f1;
+    padding: 10px;
+    display: flex;
+    /* justify-content: space-between; */
+    align-items: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sensor-values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.alert-icon {
+    color: green; /* Default color */
+    transition: color 0.5s ease;
+}
+
+/* Change icon color to red on alert */
+.alert-triggered .alert-icon {
+    color: red;
+}
+.top-div{
+    flex: 1;
+    display: flex;
+    padding: 200px;
+    left: 200px;
+    align-items: center;
+    width: 80%;
+}
+.chart-container {
+    width: 300px;
+    margin-bottom: 20px;
+}
